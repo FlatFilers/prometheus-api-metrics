@@ -85,7 +85,7 @@ class ExpressMiddleware {
         return route;
     }
 
-    middleware(req, res, next) {
+    async middleware(req, res, next) {
         if (!this.setupOptions.server && req.socket) {
             this.setupOptions.server = req.socket.server;
             this._collectDefaultServerMetrics(this.setupOptions.defaultMetricsInterval);
@@ -96,11 +96,13 @@ class ExpressMiddleware {
         if (routeUrl === this.setupOptions.metricsRoute) {
             debug('Request to /metrics endpoint');
             res.set('Content-Type', Prometheus.register.contentType);
-            return res.send(Prometheus.register.metrics());
+            const metrics = await Prometheus.register.metrics();
+            return res.send(metrics);
         }
         if (routeUrl === `${this.setupOptions.metricsRoute}.json`) {
             debug('Request to /metrics endpoint');
-            return res.json(Prometheus.register.getMetricsAsJSON());
+            const metrics = await Prometheus.register.getMetricsAsJSON();
+            return res.json(metrics);
         }
 
         req.metrics = {
